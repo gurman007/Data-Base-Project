@@ -1,0 +1,40 @@
+-> Query 1: Overview - What's in the Code?
+   Purpose: Show the graph structure
+
+MATCH (n:AstNode)
+RETURN DISTINCT labels(n) AS NodeType, count(n) AS Count
+ORDER BY Count DESC
+LIMIT 10
+
+---
+
+-> Query 2: Find the Vulnerability (BAD Pattern)
+   Purpose: Detect stack allocation with heap deallocation
+
+MATCH (vuln:CastExpression)
+WHERE vuln.code CONTAINS "ALLOCA"
+RETURN vuln.code AS VulnerableCode, "Stack allocated, heap deallocated" AS Issue
+
+---
+
+-> Query 3: Find the Safe Pattern (GOOD Pattern)
+   Purpose: Show correct heap allocation
+
+
+MATCH (safe:NewArrayExpression)
+RETURN safe.code AS SafeCode, "Correctly uses heap allocation" AS Status
+
+---
+
+-> Query 4: Calculate Vulnerability Density
+   Purpose: Quantify the security risk
+
+
+MATCH (vulnerable:CastExpression)
+WHERE vulnerable.code CONTAINS "ALLOCA"
+WITH count(vulnerable) AS VulnCount
+MATCH (total:AstNode)
+RETURN VulnCount AS Vulnerabilities,
+       count(total) AS TotalNodes,
+       round(VulnCount * 100.0 / count(total), 2) AS VulnerabilityDensity
+
